@@ -22,20 +22,16 @@ jobs:
       run: |
         set +e
         MC=build/moddev/artifacts/minecraft-patched-26.3.0.23-beta.jar
-        ls -la build/moddev/artifacts/
-        jp() { for c in "$@"; do echo "################ $c"; javap -cp "$MC" -p "$c" 2>&1 | head -120; done; }
-        unzip -l "$MC" | awk '{print $4}' | grep -E '^net/minecraft/client/renderer/[A-Za-z]+\.class$' | tr '\n' ' '
-        echo
-        unzip -l "$MC" | awk '{print $4}' | grep -i -E 'shaperender|gizmo|outline|rendertype/|/state/level/' | head -80 | tr '\n' ' '
-        echo
-        jp net.minecraft.client.renderer.ShapeRenderer net.minecraft.client.renderer.SubmitNodeCollector com.mojang.blaze3d.vertex.VertexConsumer com.mojang.blaze3d.vertex.PoseStack\$Pose
-        jp net.minecraft.client.renderer.state.level.BlockOutlineRenderState net.minecraft.client.renderer.state.BlockOutlineRenderState net.minecraft.client.renderer.rendertype.RenderTypes net.minecraft.client.renderer.rendertype.RenderType net.minecraft.client.renderer.RenderType
-        jp net.minecraft.client.Camera net.minecraft.world.level.SignalGetter net.minecraft.world.phys.AABB net.minecraft.client.renderer.SubmitNodeCollector\$CustomGeometryRenderer net.minecraft.client.renderer.OrderedSubmitNodeCollector
-        javap -cp "$MC" -p net.minecraft.client.renderer.RenderPipelines | grep -i -E 'line|debug|quad|filled|lightning|gui ' | head -60
-        javap -cp "$MC" -p net.minecraft.client.renderer.LevelRenderer | grep -i -E 'outline|hit' | head -20
-        javap -cp "$MC" -p -c net.minecraft.client.renderer.LevelRenderer | grep -A60 -E 'void (render|submit)BlockOutline' | grep -E 'invoke|getfield|ldc' | head -60
+        jp() { for c in "$@"; do echo "################ $c"; javap -cp "$MC" -p "$c" 2>&1 | grep -v 'lambda\$' | head -80; done; }
+        jp net.minecraft.gizmos.Gizmos net.minecraft.gizmos.GizmoProperties net.minecraft.gizmos.GizmoStyle net.minecraft.gizmos.CuboidGizmo net.minecraft.gizmos.SimpleGizmoCollector net.minecraft.gizmos.Gizmos\$TemporaryCollection net.minecraft.gizmos.GizmoCollector
+        javap -cp "$MC" -p net.minecraft.client.renderer.LevelRenderer | grep -i gizmo
+        javap -cp "$MC" -p net.minecraft.client.Minecraft | grep -i gizmo
+        javap -cp "$MC" -p -c net.minecraft.client.renderer.LevelRenderer | grep -i -E 'gizmo|withCollector|Method .*(extract|submit|render)' | head -60
+        javap -cp "$MC" -p -c net.minecraft.client.Minecraft | grep -i -E 'gizmo|withCollector' | head -20
+        javap -cp "$MC" -p -c net.minecraft.client.renderer.feature.ShapeOutlineFeatureRenderer | head -120
+        javap -cp "$MC" -p net.minecraft.client.renderer.rendertype.RenderSetup net.minecraft.client.renderer.rendertype.RenderSetup\$RenderSetupBuilder | head -80
+        javap -cp "$MC" -p net.minecraft.client.renderer.RenderPipelines | grep -E 'LINES|DEBUG_FILLED|DEBUG_QUADS|FILLED' | head
         SRC=$(find ~/.gradle -name 'neoforge-*-sources.jar' | head -1)
         mkdir -p /tmp/nf && (cd /tmp/nf && unzip -q -o "$SRC")
-        grep -v '^import\|^ \*\|^/\*\|^$' /tmp/nf/net/neoforged/neoforge/client/NeoForgeRenderTypes.java | head -120
-        grep -rn 'addCustomRenderer\|CustomBlockOutlineRenderer' /tmp/nf --include=*.java | grep -v 'event/ExtractBlockOutline\|client/CustomBlockOutline' | head
-        grep -n 'registerSimpleItem\|registerItem' /tmp/nf/net/neoforged/neoforge/registries/DeferredRegister.java | head
+        grep -rln -i 'gizmo' /tmp/nf | head
+        grep -v '^import\|^ \*\|^/\*\|^$' /tmp/nf/net/neoforged/neoforge/client/NeoForgeRenderPipelines.java | head -60
