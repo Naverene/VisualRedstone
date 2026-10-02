@@ -21,9 +21,10 @@ jobs:
     - name: Print sources
       run: |
         find / -name '*.jar' -path '*neoforge*' 2>/dev/null | grep -i -E 'sources|merged|minecraft' | head -20
-        SRC=$(find / -name '*sources*.jar' -path '*neoforge*' 2>/dev/null | head -1)
-        echo "SRC=$SRC"
-        mkdir -p /tmp/src && cd /tmp/src && unzip -q -o "$SRC"
+        mkdir -p /tmp/src && cd /tmp/src
+        for j in $(find / -name '*sources*.jar' 2>/dev/null | grep -v '/proc/' | grep -i -E 'neoforge|minecraft|moddev'); do echo "JAR $j"; unzip -q -o "$j" || true; done
+        find /tmp/src -name 'ShapeRenderer.java' -o -name 'LevelRenderer.java' | head
+        ls net/neoforged/neoforge/client/event/ | head -60
         show() { for f in "$@"; do echo "################ $f"; cat "$f" 2>/dev/null | head -400; done; }
         ls net/neoforged/neoforge/client/event/ | head -200
         ls net/minecraft/client/renderer/ | head -300
@@ -31,7 +32,7 @@ jobs:
         ls net/minecraft/client/renderer/rendertype 2>/dev/null
         ls net/minecraft/client/renderer/state 2>/dev/null
         show net/minecraft/client/renderer/ShapeRenderer.java
-        show net/neoforged/neoforge/client/event/ExtractBlockOutlineRenderStateEvent.java net/neoforged/neoforge/client/event/RenderLevelStageEvent.java net/neoforged/neoforge/client/CustomBlockOutlineRenderer.java
+        show net/neoforged/neoforge/client/event/SubmitCustomGeometryEvent.java net/neoforged/neoforge/client/event/ExtractBlockOutlineRenderStateEvent.java net/neoforged/neoforge/client/event/RenderLevelStageEvent.java net/neoforged/neoforge/client/CustomBlockOutlineRenderer.java
         show net/minecraft/client/renderer/state/BlockOutlineRenderState.java
         grep -n -i -B3 -A40 'void renderHitOutline\|renderBlockOutline' net/minecraft/client/renderer/LevelRenderer.java | head -250
         grep -rn 'LINES\|lines\|debugQuads\|DEBUG_QUADS\|NO_DEPTH\|noDepth\|debugFilledBox\|DEBUG_FILLED' net/minecraft/client/renderer/RenderPipelines.java | head -60
