@@ -1,5 +1,7 @@
 package net.neverandy.vr;
 
+import java.io.File;
+
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -31,6 +33,7 @@ public class VisualRedstone {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        ClientConfig.load(new File(event.getModConfigurationDirectory(), MOD_ID + "-client.cfg"));
         redstoneVisualizer = new RedstoneVisualizer();
         GameRegistry.registerItem(redstoneVisualizer, "redstoneVisualizer");
     }
