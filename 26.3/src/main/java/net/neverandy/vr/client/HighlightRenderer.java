@@ -8,8 +8,9 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.RedStoneWireBlock;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -70,8 +71,8 @@ public class HighlightRenderer {
     /** The strongest redstone signal reaching the block, or the power level of redstone dust. */
     private static int signal(Level level, BlockPos pos, BlockState state) {
         int power = level.getBestNeighborSignal(pos);
-        if (state.getBlock() instanceof RedStoneWireBlock) {
-            power = Math.max(power, state.getValue(RedStoneWireBlock.POWER));
+        if (state.is(Blocks.REDSTONE_WIRE) && state.hasProperty(BlockStateProperties.POWER)) {
+            power = Math.max(power, state.getValue(BlockStateProperties.POWER));
         }
         return power;
     }
