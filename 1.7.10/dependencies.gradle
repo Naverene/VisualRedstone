@@ -1,0 +1,3 @@
+// Visual Redstone has no dependencies beyond Minecraft Forge.
+dependencies {
+}
