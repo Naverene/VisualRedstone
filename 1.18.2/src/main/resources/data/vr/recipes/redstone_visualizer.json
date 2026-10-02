@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " T ",
+    "ORC",
+    " S "
+  ],
+  "key": {
+    "T": { "item": "minecraft:redstone_torch" },
+    "O": { "item": "minecraft:compass" },
+    "R": { "item": "minecraft:redstone" },
+    "C": { "item": "minecraft:clock" },
+    "S": { "item": "minecraft:stick" }
+  },
+  "result": { "item": "vr:redstone_visualizer", "count": 1 }
+}
