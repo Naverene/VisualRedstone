@@ -21,22 +21,21 @@ jobs:
     - name: Print APIs
       run: |
         set +e
-        find build ~/.gradle -name '*.jar' 2>/dev/null | grep -i -E 'minecraft|neoforge' | grep -v -E 'installertools|binarypatcher' | head -20
-        MC=""
-        for j in $(find build ~/.gradle -name '*.jar' 2>/dev/null); do
-          if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/renderer/ShapeRenderer.class'; then MC="$j"; break; fi
-        done
-        echo "MC=$MC"
+        MC=build/moddev/artifacts/minecraft-patched-26.3.0.23-beta.jar
+        ls -la build/moddev/artifacts/
+        jp() { for c in "$@"; do echo "################ $c"; javap -cp "$MC" -p "$c" 2>&1 | head -120; done; }
+        unzip -l "$MC" | awk '{print $4}' | grep -E '^net/minecraft/client/renderer/[A-Za-z]+\.class$' | tr '\n' ' '
+        echo
+        unzip -l "$MC" | awk '{print $4}' | grep -i -E 'shaperender|gizmo|outline|rendertype/|/state/level/' | head -80 | tr '\n' ' '
+        echo
+        jp net.minecraft.client.renderer.ShapeRenderer net.minecraft.client.renderer.SubmitNodeCollector com.mojang.blaze3d.vertex.VertexConsumer com.mojang.blaze3d.vertex.PoseStack\$Pose
+        jp net.minecraft.client.renderer.state.level.BlockOutlineRenderState net.minecraft.client.renderer.state.BlockOutlineRenderState net.minecraft.client.renderer.rendertype.RenderTypes net.minecraft.client.renderer.rendertype.RenderType net.minecraft.client.renderer.RenderType
+        jp net.minecraft.client.Camera net.minecraft.world.level.SignalGetter net.minecraft.world.phys.AABB net.minecraft.client.renderer.SubmitNodeCollector\$CustomGeometryRenderer net.minecraft.client.renderer.OrderedSubmitNodeCollector
+        javap -cp "$MC" -p net.minecraft.client.renderer.RenderPipelines | grep -i -E 'line|debug|quad|filled|lightning|gui ' | head -60
+        javap -cp "$MC" -p net.minecraft.client.renderer.LevelRenderer | grep -i -E 'outline|hit' | head -20
+        javap -cp "$MC" -p -c net.minecraft.client.renderer.LevelRenderer | grep -A60 -E 'void (render|submit)BlockOutline' | grep -E 'invoke|getfield|ldc' | head -60
         SRC=$(find ~/.gradle -name 'neoforge-*-sources.jar' | head -1)
         mkdir -p /tmp/nf && (cd /tmp/nf && unzip -q -o "$SRC")
-        jp() { for c in "$@"; do echo "################ $c"; javap -cp "$MC" -p "$c" 2>&1 | head -150; done; }
-        unzip -l "$MC" | grep -E 'net/minecraft/client/renderer/[A-Za-z]+\.class' | awk '{print $4}' | head -200
-        unzip -l "$MC" | grep -E 'net/minecraft/(gizmos|client/renderer/(rendertype|state))/' | awk '{print $4}' | head -150
-        jp net.minecraft.client.renderer.ShapeRenderer net.minecraft.client.renderer.MultiBufferSource com.mojang.blaze3d.vertex.VertexConsumer com.mojang.blaze3d.vertex.PoseStack com.mojang.blaze3d.vertex.PoseStack\$Pose
-        jp net.minecraft.client.renderer.state.BlockOutlineRenderState net.minecraft.client.renderer.SubmitNodeCollector net.minecraft.client.renderer.rendertype.RenderTypes net.minecraft.client.renderer.RenderType net.minecraft.client.renderer.rendertype.RenderType
-        jp net.minecraft.client.Camera net.minecraft.world.level.SignalGetter net.minecraft.world.phys.AABB net.minecraft.world.phys.shapes.VoxelShape
-        javap -cp "$MC" -p net.minecraft.client.renderer.LevelRenderer | grep -i -E 'outline|hit|gizmo|submit' | head -40
-        javap -cp "$MC" -p net.minecraft.client.renderer.RenderPipelines | grep -i -E 'line|debug|quad|filled|lightning' | head -60
-        for f in /tmp/nf/net/neoforged/neoforge/client/event/SubmitCustomGeometryEvent.java /tmp/nf/net/neoforged/neoforge/client/event/ExtractBlockOutlineRenderStateEvent.java /tmp/nf/net/neoforged/neoforge/client/event/RenderLevelStageEvent.java /tmp/nf/net/neoforged/neoforge/client/CustomBlockOutlineRenderer.java; do echo "################ $f"; grep -v '^import\|^ \*\|^/\*\|^$' "$f" | head -200; done
-        ls /tmp/nf/net/neoforged/neoforge/client/
-        for c in $(unzip -l "$MC" | grep -E 'net/minecraft/gizmos/[A-Za-z]+\.class' | awk '{print $4}' | sed 's/\.class$//; s#/#.#g'); do jp $c; done
+        grep -v '^import\|^ \*\|^/\*\|^$' /tmp/nf/net/neoforged/neoforge/client/NeoForgeRenderTypes.java | head -120
+        grep -rn 'addCustomRenderer\|CustomBlockOutlineRenderer' /tmp/nf --include=*.java | grep -v 'event/ExtractBlockOutline\|client/CustomBlockOutline' | head
+        grep -n 'registerSimpleItem\|registerItem' /tmp/nf/net/neoforged/neoforge/registries/DeferredRegister.java | head
