@@ -1,4 +1,4 @@
-# Temporary: prints Minecraft 26.3 / NeoForge client rendering sources so the port can be written against them.
+# Temporary: prints Minecraft 26.3 / NeoForge client rendering APIs so the port can be written against them.
 name: Probe
 on:
   push:
@@ -17,33 +17,26 @@ jobs:
         java-version: '25'
         distribution: 'temurin'
     - name: Make Minecraft artifacts
-      run: ./gradlew --no-daemon createMinecraftArtifacts compileJava || ./gradlew --no-daemon tasks --all | head -100
-    - name: Print sources
+      run: ./gradlew --no-daemon createMinecraftArtifacts
+    - name: Print APIs
       run: |
-        find / -name '*.jar' -path '*neoforge*' 2>/dev/null | grep -i -E 'sources|merged|minecraft' | head -20
-        mkdir -p /tmp/src && cd /tmp/src
-        for j in $(find / -name '*sources*.jar' 2>/dev/null | grep -v '/proc/' | grep -i -E 'neoforge|minecraft|moddev'); do echo "JAR $j"; unzip -q -o "$j" || true; done
-        find /tmp/src -name 'ShapeRenderer.java' -o -name 'LevelRenderer.java' | head
-        ls net/neoforged/neoforge/client/event/ | head -60
-        show() { for f in "$@"; do echo "################ $f"; cat "$f" 2>/dev/null | head -400; done; }
-        ls net/neoforged/neoforge/client/event/ | head -200
-        ls net/minecraft/client/renderer/ | head -300
-        ls net/minecraft/gizmos 2>/dev/null
-        ls net/minecraft/client/renderer/rendertype 2>/dev/null
-        ls net/minecraft/client/renderer/state 2>/dev/null
-        show net/minecraft/client/renderer/ShapeRenderer.java
-        show net/neoforged/neoforge/client/event/SubmitCustomGeometryEvent.java net/neoforged/neoforge/client/event/ExtractBlockOutlineRenderStateEvent.java net/neoforged/neoforge/client/event/RenderLevelStageEvent.java net/neoforged/neoforge/client/CustomBlockOutlineRenderer.java
-        show net/minecraft/client/renderer/state/BlockOutlineRenderState.java
-        grep -n -i -B3 -A40 'void renderHitOutline\|renderBlockOutline' net/minecraft/client/renderer/LevelRenderer.java | head -250
-        grep -rn 'LINES\|lines\|debugQuads\|DEBUG_QUADS\|NO_DEPTH\|noDepth\|debugFilledBox\|DEBUG_FILLED' net/minecraft/client/renderer/RenderPipelines.java | head -60
-        grep -rln 'static RenderType lines\b\|RenderType lines(' net/minecraft/client/renderer | head
-        for f in $(grep -rln 'RenderType lines(' net/minecraft/client/renderer | head -2); do grep -n 'public static RenderType\|static RenderType create\|public static .* create(' $f | head -80; done
-        show com/mojang/blaze3d/vertex/VertexConsumer.java
-        grep -n 'public static final VertexFormat' com/mojang/blaze3d/vertex/DefaultVertexFormat.java
-        for f in net/minecraft/gizmos/*.java; do echo "#### $f"; grep -n 'public' $f | head -40; done 2>/dev/null
-        grep -n 'getBestNeighborSignal\|getDirectSignalTo\|hasNeighborSignal' net/minecraft/world/level/Level.java net/minecraft/world/level/SignalGetter.java 2>/dev/null | head
-        grep -n 'POWER' net/minecraft/world/level/block/RedStoneWireBlock.java | head -3
-        grep -n 'MultiBufferSource\|bufferSource\|renderBuffers' net/minecraft/client/Minecraft.java | head
-        show net/minecraft/client/renderer/MultiBufferSource.java
-        grep -rn 'class .*SubmitNodeCollector\|submitCustomGeometry\|submitShape' net/minecraft/client/renderer/SubmitNodeCollector.java net/minecraft/client/renderer/SubmitNodeStorage.java 2>/dev/null | head -30
-        grep -n 'Item.Properties\|setId\|registerSimpleItem\|registerItem' net/neoforged/neoforge/registries/DeferredRegister.java | head -20
+        set +e
+        find build ~/.gradle -name '*.jar' 2>/dev/null | grep -i -E 'minecraft|neoforge' | grep -v -E 'installertools|binarypatcher' | head -20
+        MC=""
+        for j in $(find build ~/.gradle -name '*.jar' 2>/dev/null); do
+          if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/renderer/ShapeRenderer.class'; then MC="$j"; break; fi
+        done
+        echo "MC=$MC"
+        SRC=$(find ~/.gradle -name 'neoforge-*-sources.jar' | head -1)
+        mkdir -p /tmp/nf && (cd /tmp/nf && unzip -q -o "$SRC")
+        jp() { for c in "$@"; do echo "################ $c"; javap -cp "$MC" -p "$c" 2>&1 | head -150; done; }
+        unzip -l "$MC" | grep -E 'net/minecraft/client/renderer/[A-Za-z]+\.class' | awk '{print $4}' | head -200
+        unzip -l "$MC" | grep -E 'net/minecraft/(gizmos|client/renderer/(rendertype|state))/' | awk '{print $4}' | head -150
+        jp net.minecraft.client.renderer.ShapeRenderer net.minecraft.client.renderer.MultiBufferSource com.mojang.blaze3d.vertex.VertexConsumer com.mojang.blaze3d.vertex.PoseStack com.mojang.blaze3d.vertex.PoseStack\$Pose
+        jp net.minecraft.client.renderer.state.BlockOutlineRenderState net.minecraft.client.renderer.SubmitNodeCollector net.minecraft.client.renderer.rendertype.RenderTypes net.minecraft.client.renderer.RenderType net.minecraft.client.renderer.rendertype.RenderType
+        jp net.minecraft.client.Camera net.minecraft.world.level.SignalGetter net.minecraft.world.phys.AABB net.minecraft.world.phys.shapes.VoxelShape
+        javap -cp "$MC" -p net.minecraft.client.renderer.LevelRenderer | grep -i -E 'outline|hit|gizmo|submit' | head -40
+        javap -cp "$MC" -p net.minecraft.client.renderer.RenderPipelines | grep -i -E 'line|debug|quad|filled|lightning' | head -60
+        for f in /tmp/nf/net/neoforged/neoforge/client/event/SubmitCustomGeometryEvent.java /tmp/nf/net/neoforged/neoforge/client/event/ExtractBlockOutlineRenderStateEvent.java /tmp/nf/net/neoforged/neoforge/client/event/RenderLevelStageEvent.java /tmp/nf/net/neoforged/neoforge/client/CustomBlockOutlineRenderer.java; do echo "################ $f"; grep -v '^import\|^ \*\|^/\*\|^$' "$f" | head -200; done
+        ls /tmp/nf/net/neoforged/neoforge/client/
+        for c in $(unzip -l "$MC" | grep -E 'net/minecraft/gizmos/[A-Za-z]+\.class' | awk '{print $4}' | sed 's/\.class$//; s#/#.#g'); do jp $c; done

@@ -2,22 +2,22 @@ package net.neverandy.vr.client;
 
 import org.lwjgl.opengl.GL11;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.math.Matrix4f;
 
+import net.minecraft.block.BlockState;
+import net.minecraft.block.RedstoneWireBlock;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.RedStoneWireBlock;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.DrawHighlightEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -34,15 +34,15 @@ public class HighlightRenderer {
 
     @SubscribeEvent
     public static void onHighlightBlock(DrawHighlightEvent.HighlightBlock event) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || !(player.getMainHandItem().getItem() == VisualRedstone.REDSTONE_VISUALIZER.get()
-            || player.getOffhandItem().getItem() == VisualRedstone.REDSTONE_VISUALIZER.get())) {
+        ClientPlayerEntity player = Minecraft.getInstance().player;
+        if (player == null || !(player.getHeldItemMainhand().getItem() == VisualRedstone.REDSTONE_VISUALIZER.get()
+            || player.getHeldItemOffhand().getItem() == VisualRedstone.REDSTONE_VISUALIZER.get())) {
             return;
         }
-        Level level = player.level;
-        BlockPos pos = event.getTarget().getBlockPos();
+        World level = player.world;
+        BlockPos pos = event.getTarget().getPos();
         BlockState state = level.getBlockState(pos);
-        if (state.isAir() || !level.getWorldBorder().isWithinBounds(pos)) {
+        if (state.isAir(level, pos) || !level.getWorldBorder().contains(pos)) {
             return;
         }
         int power = signal(level, pos, state);
@@ -50,27 +50,27 @@ public class HighlightRenderer {
             return;
         }
         VoxelShape shape = state.getShape(level, pos);
-        AABB bounds = shape.isEmpty() ? new AABB(0, 0, 0, 1, 1, 1) : shape.bounds();
-        Vec3 camera = event.getInfo().getPosition();
-        AABB box = bounds.move(pos).inflate(0.004).move(-camera.x, -camera.y, -camera.z);
+        AxisAlignedBB bounds = shape.isEmpty() ? new AxisAlignedBB(0, 0, 0, 1, 1, 1) : shape.getBoundingBox();
+        Vector3d camera = event.getInfo().getProjectedView();
+        AxisAlignedBB box = bounds.offset(pos).grow(0.004).offset(-camera.x, -camera.y, -camera.z);
         draw(event.getMatrix(), box, power);
     }
 
     /** The strongest redstone signal reaching the block, or the power level of redstone dust. */
-    private static int signal(Level level, BlockPos pos, BlockState state) {
-        int power = level.getBestNeighborSignal(pos);
-        if (state.getBlock() instanceof RedStoneWireBlock) {
-            power = Math.max(power, state.getValue(RedStoneWireBlock.POWER));
+    private static int signal(World level, BlockPos pos, BlockState state) {
+        int power = level.getRedstonePowerFromNeighbors(pos);
+        if (state.getBlock() instanceof RedstoneWireBlock) {
+            power = Math.max(power, state.get(RedstoneWireBlock.POWER));
         }
         return power;
     }
 
-    private static void draw(PoseStack poseStack, AABB box, int power) {
+    private static void draw(MatrixStack poseStack, AxisAlignedBB box, int power) {
         float strength = 0.55F + 0.45F * power / 15.0F;
         float r = 0.25F * strength, g = strength, b = 0.25F * strength;
         // A slow pulse on the fill draws the eye without hiding the block.
         float pulse = 0.5F + 0.5F * (float) Math.sin(System.currentTimeMillis() / 250.0);
-        Matrix4f matrix = poseStack.last().pose();
+        Matrix4f matrix = poseStack.getLast().getMatrix();
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -81,21 +81,21 @@ public class HighlightRenderer {
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
 
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.getBuilder();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR);
+        Tessellator tesselator = Tessellator.getInstance();
+        BufferBuilder buffer = tesselator.getBuffer();
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
         BoxShapes.faces(buffer, matrix, box, r, g, b, 0.18F + 0.12F * pulse);
-        tesselator.end();
+        tesselator.draw();
 
         RenderSystem.lineWidth(7.0F);
-        buffer.begin(GL11.GL_LINES, DefaultVertexFormat.POSITION_COLOR);
+        buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
         BoxShapes.edges(buffer, matrix, box, 0.0F, 0.0F, 0.0F, 0.85F);
-        tesselator.end();
+        tesselator.draw();
 
         RenderSystem.lineWidth(3.5F);
-        buffer.begin(GL11.GL_LINES, DefaultVertexFormat.POSITION_COLOR);
+        buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
         BoxShapes.edges(buffer, matrix, box, r, g, b, 1.0F);
-        tesselator.end();
+        tesselator.draw();
 
         RenderSystem.lineWidth(1.0F);
         RenderSystem.depthMask(true);
