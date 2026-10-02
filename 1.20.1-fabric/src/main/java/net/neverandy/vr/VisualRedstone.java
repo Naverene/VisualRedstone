@@ -8,9 +8,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class VisualRedstone implements ModInitializer {
 
     public static final String MOD_ID = "vr";
+    public static final Logger LOGGER = LoggerFactory.getLogger("Visual Redstone");
 
     public static final Item REDSTONE_VISUALIZER = new Item(new Item.Properties().stacksTo(1));
 
