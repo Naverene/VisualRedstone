@@ -10,8 +10,8 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 
-// The jar is named visualredstone-<mod version>-<Minecraft version>.jar.
-version = "${mod_version}-${mc_version}"
+// The jar is named visualredstone-<mod version>-<Minecraft version>-<loader>.jar.
+version = "${mod_version}-${mc_version}-forge"
 group = 'net.neverandy.vr'
 archivesBaseName = 'visualredstone'
 

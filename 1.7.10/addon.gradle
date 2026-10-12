@@ -1,7 +1,7 @@
-// The jars are named visualredstone-<mod version>-<Minecraft version>.jar.
+// The jars are named visualredstone-<mod version>-<Minecraft version>-forge.jar.
 base {
     archivesName = 'visualredstone'
 }
 tasks.withType(Jar).configureEach {
-    archiveVersion.set(project.provider { "${project.version}-${project.minecraftVersion}" })
+    archiveVersion.set(project.provider { "${project.version}-${project.minecraftVersion}-forge" })
 }
