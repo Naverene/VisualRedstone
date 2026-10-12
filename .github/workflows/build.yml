@@ -4,8 +4,7 @@
 # - every push (including merges) to the default branch builds all versions and updates the rolling "Development build"
 #   pre-release with every version's jar
 # - pushing a version tag such as v1.2.0 builds all versions as that mod version, publishes one release
-#   with every jar, and uploads each jar to CurseForge when the CURSEFORGE_TOKEN secret and the
-#   CURSEFORGE_PROJECT_ID variable are set
+#   with every jar, and uploads each jar to CurseForge when the CURSEFORGE_TOKEN secret is set
 # Every build also starts a server with the mod to catch crashes and data errors while loading, and
 # keeps its jar as a downloadable artifact on the run's page.
 
@@ -221,8 +220,9 @@ jobs:
     env:
       # An upload token from CurseForge (account settings > API Tokens), stored as a repository secret.
       CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-      # The CurseForge project id of Visual Redstone, stored as a repository variable.
-      CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+      # The CurseForge project id of Visual Redstone (curseforge.com/minecraft/mc-mods/visual-redstone).
+      # A CURSEFORGE_PROJECT_ID repository variable overrides it.
+      CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID || '235932' }}
 
     steps:
     - name: Download the mod jar

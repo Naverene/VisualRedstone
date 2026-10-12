@@ -10,8 +10,8 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 
-// The jar is named visualredstone-<mod version>-<Minecraft version>.jar.
-version = "${mod_version}-${mc_version}"
+// The jar is named visualredstone-<mod version>-<Minecraft version>-<loader>.jar.
+version = "${mod_version}-${mc_version}-forge"
 group = 'net.neverandy.vr'
 archivesBaseName = 'visualredstone'
 
@@ -49,6 +49,13 @@ minecraft {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
+
+    // Curios is optional: wearing the Visualizer in a charm slot counts as holding it.
+    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.18.2-5.0.9.2:api")
+}
+
+repositories {
+    maven { url = 'https://maven.theillusivec4.top/' }
 }
 
 // Fills in the version in mods.toml.

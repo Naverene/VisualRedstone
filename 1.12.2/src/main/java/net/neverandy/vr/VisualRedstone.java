@@ -21,7 +21,7 @@ public class VisualRedstone
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event)
 	{
-		event.getRegistry().register(new Item()
+		event.getRegistry().register(new RedstoneVisualizerItem()
 				.setMaxStackSize(1)
 				.setCreativeTab(CreativeTabs.REDSTONE)
 				.setUnlocalizedName(MOD_ID + ".redstone_visualizer")

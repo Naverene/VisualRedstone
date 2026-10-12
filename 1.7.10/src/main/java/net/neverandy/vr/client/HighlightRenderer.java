@@ -9,7 +9,6 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
@@ -20,7 +19,7 @@ import org.lwjgl.opengl.GL11;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.neverandy.vr.ClientConfig;
-import net.neverandy.vr.VisualRedstone;
+import net.neverandy.vr.compat.Accessories;
 
 /**
  * While the player holds a Redstone Visualizer:
@@ -46,8 +45,7 @@ public class HighlightRenderer {
         if (player == null) {
             return;
         }
-        ItemStack held = player.getCurrentEquippedItem();
-        if (held == null || held.getItem() != VisualRedstone.redstoneVisualizer) {
+        if (!Accessories.isUsingVisualizer(player)) {
             return;
         }
         World world = player.worldObj;

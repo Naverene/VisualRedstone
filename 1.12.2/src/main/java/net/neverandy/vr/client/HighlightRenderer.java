@@ -24,6 +24,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.neverandy.vr.ClientConfig;
 import net.neverandy.vr.VisualRedstone;
+import net.neverandy.vr.compat.Accessories;
 
 /**
  * While the player holds a Redstone Visualizer:
@@ -48,8 +49,7 @@ public class HighlightRenderer
 	{
 		Minecraft minecraft = Minecraft.getMinecraft();
 		EntityPlayer player = minecraft.player;
-		if (player == null || player.getHeldItemMainhand().getItem() != VisualRedstone.redstoneVisualizer
-				&& player.getHeldItemOffhand().getItem() != VisualRedstone.redstoneVisualizer)
+		if (player == null || !Accessories.isUsingVisualizer(player))
 		{
 			return;
 		}

@@ -28,6 +28,7 @@ import net.neoforged.neoforge.client.event.ExtractBlockOutlineRenderStateEvent;
 import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
 import net.neverandy.vr.Config;
 import net.neverandy.vr.VisualRedstone;
+import net.neverandy.vr.compat.Accessories;
 
 /**
  * While the player holds a Redstone Visualizer:
@@ -156,8 +157,7 @@ public class HighlightRenderer {
 
     private static boolean holdingVisualizer() {
         LocalPlayer player = Minecraft.getInstance().player;
-        return player != null && (player.getMainHandItem().is(VisualRedstone.REDSTONE_VISUALIZER.get())
-            || player.getOffhandItem().is(VisualRedstone.REDSTONE_VISUALIZER.get()));
+        return player != null && Accessories.isUsingVisualizer(player);
     }
 
     private static void label(SubmitNodeCollector collector, PoseStack poseStack, Font font, String text, float y, int color,
