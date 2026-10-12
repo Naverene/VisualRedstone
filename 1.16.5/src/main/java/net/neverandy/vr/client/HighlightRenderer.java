@@ -28,6 +28,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.neverandy.vr.Config;
 import net.neverandy.vr.VisualRedstone;
+import net.neverandy.vr.compat.Accessories;
 
 /**
  * While the player holds a Redstone Visualizer:
@@ -52,8 +53,7 @@ public class HighlightRenderer {
     public static void onRenderWorldLast(RenderWorldLastEvent event) {
         Minecraft minecraft = Minecraft.getInstance();
         ClientPlayerEntity player = minecraft.player;
-        if (player == null || !(player.getHeldItemMainhand().getItem() == VisualRedstone.REDSTONE_VISUALIZER.get()
-            || player.getHeldItemOffhand().getItem() == VisualRedstone.REDSTONE_VISUALIZER.get())) {
+        if (player == null || !Accessories.isUsingVisualizer(player)) {
             return;
         }
         World level = player.world;

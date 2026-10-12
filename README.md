@@ -1,6 +1,6 @@
 # Visual Redstone
 
-Visual Redstone adds the **Redstone Visualizer**, a hand-held tool that shows how your redstone is wired. Everything below shows only while you hold it (in either hand on 1.12.2 and newer, in your hand on 1.7.10):
+Visual Redstone adds the **Redstone Visualizer**, a hand-held tool that shows how your redstone is wired. Everything below shows only while you hold it (in either hand on 1.12.2 and newer, in your hand on 1.7.10) or wear it in an accessory slot:
 
 - **Highlight:** look at a block that carries a redstone signal (or powered redstone dust) and it gets a bright green box with a translucent, gently pulsing fill and a thick dark border under a bright one, so it stands out against any background. Stronger signals show a brighter green.
 - **Power path:** every powered block wired to the one you look at gets a thinner blue box, so you can follow the signal from its source to everything it powers.
@@ -9,6 +9,17 @@ Visual Redstone adds the **Redstone Visualizer**, a hand-held tool that shows ho
 - **Quasi-connectivity hints:** pistons, dispensers and droppers that are powered only through the block above them but have not noticed yet get an orange box and "QC: fires on next update". Extended pistons that have lost their power without updating show "QC: retracts on next update".
 
 Numbers and labels are drawn through other blocks so they are never hidden, and so are the boxes on every version except 26.3, where they follow the game's own block outline.
+
+### Wearing it
+
+With an accessory mod installed, the visualizer goes in a slot and works exactly as if you were holding it, leaving both hands free. None of these mods is required.
+
+| Version | Mod | Slot |
+| --- | --- | --- |
+| 1.7.10 | Baubles or Baubles Expanded | Amulet |
+| 1.12.2 | Baubles | Charm |
+| 1.16.5, 1.18.2, 1.20.1 Forge, 26.3 NeoForge | Curios API | Charm (added for players if no other mod adds it) |
+| 1.20.1 Fabric | Trinkets | Necklace (added for players if no other mod adds it) |
 
 ### Settings
 

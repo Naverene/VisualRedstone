@@ -30,6 +30,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.neverandy.vr.Config;
 import net.neverandy.vr.VisualRedstone;
+import net.neverandy.vr.compat.Accessories;
 
 /**
  * While the player holds a Redstone Visualizer:
@@ -56,8 +57,7 @@ public class HighlightRenderer {
         }
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
-        if (player == null || !(player.getMainHandItem().is(VisualRedstone.REDSTONE_VISUALIZER.get())
-            || player.getOffhandItem().is(VisualRedstone.REDSTONE_VISUALIZER.get()))) {
+        if (player == null || !Accessories.isUsingVisualizer(player)) {
             return;
         }
         Level level = player.level();

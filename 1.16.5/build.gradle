@@ -49,6 +49,13 @@ minecraft {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
+
+    // Curios is optional: wearing the Visualizer in a charm slot counts as holding it.
+    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.1.0.1:api")
+}
+
+repositories {
+    maven { url = 'https://maven.theillusivec4.top/' }
 }
 
 // Fills in the version in mods.toml.

@@ -1,3 +1,5 @@
-// Visual Redstone has no dependencies beyond Minecraft Forge.
+// Baubles is optional: wearing the Visualizer in a bauble slot counts as holding it. Baubles Expanded
+// keeps the original Baubles API, so the jar works with either.
 dependencies {
+    compileOnly("com.github.GTNewHorizons:Baubles-Expanded:2.2.25-GTNH:dev") { transitive = false }
 }

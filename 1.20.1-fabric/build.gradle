@@ -22,6 +22,8 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 repositories {
+    maven { url = 'https://maven.terraformersmc.com/releases/' }
+    maven { url = 'https://maven.ladysnake.org/releases' }
 }
 
 dependencies {
@@ -30,6 +32,12 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+
+    // Trinkets is optional: wearing the Visualizer in a necklace slot counts as holding it. Its own
+    // dependencies are left out so they cannot change the Fabric API version the mod builds against.
+    modCompileOnly("dev.emi:trinkets:3.7.2") { transitive = false }
+    modCompileOnly("dev.onyxstudios.cardinal-components-api:cardinal-components-base:5.2.0") { transitive = false }
+    modCompileOnly("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:5.2.0") { transitive = false }
 }
 
 loom {
@@ -55,5 +63,7 @@ tasks.named('processResources', ProcessResources).configure {
     }
     from(new File(forgeDir, 'src/main/resources')) {
         exclude 'META-INF/mods.toml'
+        // Curios is a Forge mod; the Fabric build uses Trinkets instead.
+        exclude 'data/curios/**', 'data/vr/curios/**'
     }
 }
