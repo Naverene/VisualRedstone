@@ -52,7 +52,7 @@ This repository holds every version of the mod, one folder per Minecraft version
 | [1.20.1-fabric](1.20.1-fabric) | 1.20.1 | Fabric (needs Fabric API) | 17 to play, 21 to build |
 | [26.3](26.3) | 26.3 | NeoForge | 25 |
 
-Each Minecraft folder is its own Gradle project with its own wrapper. Open the folder for the version you want in your IDE (not the repository root), and run `./gradlew build` inside it. The jar lands in that folder's `build/libs` as `visualredstone-<mod version>-<Minecraft version>.jar` (with `-fabric` on the end for Fabric). The Fabric build uses the model, texture, language file and recipe from the Forge folder of the same Minecraft version, so it needs that folder next to it.
+Each Minecraft folder is its own Gradle project with its own wrapper. Open the folder for the version you want in your IDE (not the repository root), and run `./gradlew build` inside it. The jar lands in that folder's `build/libs` as `visualredstone-<mod version>-<Minecraft version>-<loader>.jar`, where the loader is `forge`, `neoforge` or `fabric`. The Fabric build uses the model, texture, language file and recipe from the Forge folder of the same Minecraft version, so it needs that folder next to it.
 
 ## Builds and releases
 
