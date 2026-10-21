@@ -1,21 +1,15 @@
-# Builds every Minecraft version of the mod, each from its own folder with its own Java, and publishes
-# the jars:
-# - pull requests build only the versions whose folders they change (all of them if this workflow changes)
-# - every push (including merges) to the default branch builds all versions and updates the rolling "Development build"
-#   pre-release with every version's jar
-# - pushing a version tag such as v1.2.0 builds all versions as that mod version, publishes one release
-#   with every jar, and uploads each jar to CurseForge when the CURSEFORGE_TOKEN secret is set
-# Every build also starts a server with the mod to catch crashes and data errors while loading, and
-# keeps its jar as a downloadable artifact on the run's page.
+# Publishes a release of the mod. Everyday builds run locally with ./build-all.sh (see the README), so
+# pull requests and branch pushes no longer use GitHub Actions minutes.
+# - pushing a version tag such as v1.2.0 builds every version as that mod version, checks each one
+#   loads on a server, publishes one GitHub release with every jar, and uploads each jar to
+#   CurseForge when the CURSEFORGE_TOKEN secret is set
+# - "Run workflow" on the Actions tab builds every version on demand without publishing anything
 
-name: Build
+name: Release
 
 on:
   push:
-    branches: [ "master", "main" ]
     tags: [ "v*" ]
-  pull_request:
-    branches: [ "master", "main" ]
   workflow_dispatch:
 
 jobs:
@@ -42,30 +36,10 @@ jobs:
           { "dir": "26.3",   "java": "25", "cf_java": "25", "loader": "neoforge" }
         ]
     steps:
-    - uses: actions/checkout@v4
-      if: github.event_name == 'pull_request'
-      with:
-        # Only commit history is needed to list the changed files. A sparse checkout skips old file contents.
-        fetch-depth: 0
-        sparse-checkout: .github
-
-    - name: Pick the versions to build
+    - name: List the versions to build
       id: plan
-      env:
-        BASE_SHA: ${{ github.event.pull_request.base.sha }}
       run: |
-        if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
-          changed=$(git diff --name-only "$BASE_SHA"...HEAD)
-          if grep -q '^\.github/' <<< "$changed"; then
-            versions=$(jq -c . <<< "$VERSIONS")
-          else
-            versions=$(jq -c --arg changed "$changed" \
-              '[.[] | . as $v | (($v.checkout // $v.dir) | split("\n")) as $dirs
-                | select($changed | split("\n") | any(. as $f | $dirs | any(. as $d | $f | startswith($d + "/"))))]' <<< "$VERSIONS")
-          fi
-        else
-          versions=$(jq -c . <<< "$VERSIONS")
-        fi
+        versions=$(jq -c . <<< "$VERSIONS")
         echo "Building: $(jq -r 'map(.dir) | join(", ")' <<< "$versions")"
         echo "versions=$versions" >> "$GITHUB_OUTPUT"
 
@@ -159,12 +133,9 @@ jobs:
   publish:
     name: Publish the jars on GitHub
     needs: build
-    # Pushes and merges to the default branch, and version tags. Never pull requests.
-    if: github.event_name == 'push' && (github.ref_name == github.event.repository.default_branch || startsWith(github.ref, 'refs/tags/v'))
+    # Version tags only. A manual run just builds.
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    # Two quick pushes to the default branch must not replace the development build at the same time.
-    concurrency:
-      group: publish-${{ github.ref }}
     permissions:
       contents: write
     env:
@@ -179,20 +150,7 @@ jobs:
         merge-multiple: true
         path: dist
 
-    - name: Update the development build
-      if: github.ref_name == github.event.repository.default_branch
-      run: |
-        ls -l dist
-        # Replace the previous development build, so the release always holds the newest jars.
-        gh release delete dev-build --yes --cleanup-tag || true
-        gh release create dev-build dist/*.jar \
-          --target "$GITHUB_SHA" \
-          --prerelease \
-          --title "Development build" \
-          --notes "Latest build of $GITHUB_REF_NAME for every Minecraft version, from commit $GITHUB_SHA. Untested; for testing only."
-
     - name: Publish the release for this version
-      if: startsWith(github.ref, 'refs/tags/v')
       run: |
         ls -l dist
         if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
@@ -207,7 +165,7 @@ jobs:
   curseforge:
     name: CurseForge ${{ matrix.dir }}
     needs: [ plan, publish ]
-    # Version tags only. Development builds stay on GitHub.
+    # Version tags only.
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:

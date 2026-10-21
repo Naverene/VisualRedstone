@@ -56,11 +56,18 @@ Each Minecraft folder is its own Gradle project with its own wrapper. Open the f
 
 ## Builds and releases
 
-[`.github/workflows/build.yml`](.github/workflows/build.yml) builds each version on its own Java and checks that it loads on a server.
+Builds run on your own machine, so they do not use GitHub Actions minutes. From the repository root:
 
-- Pull requests build only the versions they change.
-- Every push to the default branch (`main`) builds all versions and replaces the **Development build** pre-release with the newest jar for each one.
-- Pushing a tag such as `v1.2.0` builds every version as mod version 1.2.0 and publishes a release with all the jars. Each jar is also uploaded to CurseForge when the `CURSEFORGE_TOKEN` secret and the `CURSEFORGE_PROJECT_ID` variable are set in the repository settings.
+```
+./build-all.sh                  # build every version
+./build-all.sh 1.20.1 26.3      # build only these folders
+./build-all.sh --check          # also start a server with each jar to catch load crashes (slow)
+./build-all.sh --version 1.2.0  # build as mod version 1.2.0
+```
+
+The jars are collected in `dist/`. Each version builds on its own Java (see the table above), so set `JAVA_HOME_8`, `JAVA_HOME_17`, `JAVA_HOME_21` and `JAVA_HOME_25` to a JDK of each version; a version whose variable is unset uses your default `JAVA_HOME`. On Windows, run it from Git Bash.
+
+Releases still go through GitHub: pushing a tag such as `v1.2.0` runs [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds every version as mod version 1.2.0, checks each one loads on a server, publishes a GitHub release with all the jars, and uploads each jar to CurseForge when the `CURSEFORGE_TOKEN` secret is set. Pull requests and branch pushes do not run anything on GitHub. The workflow can also be started by hand from the Actions tab to build every version without publishing.
 
 ## History
 
